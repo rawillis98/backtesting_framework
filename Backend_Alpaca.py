@@ -1,5 +1,6 @@
 from read_key import read_key
 import sys
+import pause
 import alpaca_trade_api as tradeapi
 from Backend import Backend
 
@@ -60,23 +61,30 @@ class AlpacaBackend(Backend):
             print(e)
             sys.exit(1)
 
-
-
     def get_buying_power(self):
         return float(self.api.get_account().buying_power)
 
     def get_portfolio(self):
         return self.api.list_positions()
 
-    def step(self):
-        time.sleep(self.period)
+    def step(self, dt):
+        dt = dt.replace(hour=dt.hour - 1)
+        print(f"Sleeping until {dt} System Time")
+        pause.until(dt)
 
+    def get_time(self):
+        time = self.api.get_clock().timestamp.to_pydatetime()
+        time = time.replace(tzinfo=None)
+        return time 
 
+    def is_open(self):
+        return self.api.get_clock().is_open
 
-    
-
-    
+    def get_next_open(self):
+        time = self.api.get_clock().next_open.to_pydatetime()
+        time = time.replace(tzinfo=None)
+        return time 
 
 if __name__ == '__main__':
     ab = AlpacaBackend('/home/alex/Documents/keys/alpaca.key', '/home/alex/Documents/keys/alpaca.secret')
-    print(ab.get_account())
+    print(ab.get_next_open())

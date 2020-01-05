@@ -28,3 +28,7 @@ class Backend(ABC):
     @abstractmethod
     def step(self):
         pass
+
+    @abstractmethod
+    def get_time(self):
+        pass

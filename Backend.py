@@ -32,3 +32,7 @@ class Backend(ABC):
     @abstractmethod
     def get_time(self):
         pass
+
+    @abstractmethod
+    def verify_account_access(self):
+        pass

@@ -1,4 +1,7 @@
+import logging
+import logging.config
 from read_key import read_key
+import datetime
 import sys
 import pause
 import alpaca_trade_api as tradeapi
@@ -10,10 +13,16 @@ class AlpacaBackend(Backend):
         self.key = read_key(key_file)
         self.secret = read_key(secret_file)
         self.api = tradeapi.REST(self.key, self.secret, r'https://paper-api.alpaca.markets')
+        logging.config.fileConfig("logging.conf", disable_existing_loggers=True)
+        self.logger = logging.getLogger(__name__)
         self.period = 1
 
     def get_account(self):
         return self.api.get_account()
+
+    def verify_account_access(self):
+        self.get_accout()
+        return
 
     def get_cash(self):
         return float(self.get_account().cash)
@@ -58,7 +67,7 @@ class AlpacaBackend(Backend):
 
             return order
         except tradeapi.rest.APIError as e:
-            print(e)
+            self.logging.critical(e)
             sys.exit(1)
 
     def get_buying_power(self):
@@ -69,8 +78,9 @@ class AlpacaBackend(Backend):
 
     def step(self, dt):
         dt = dt.replace(hour=dt.hour - 1)
-        print(f"Sleeping until {dt} System Time")
+        self.logger.debug(f"Sleeping until {dt} System Time")
         pause.until(dt)
+        self.logger.debug(f"Done sleeping. System time is: {datetime.datetime.now()}")
 
     def get_time(self):
         time = self.api.get_clock().timestamp.to_pydatetime()

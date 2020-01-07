@@ -25,7 +25,7 @@ def test_get_equity():
 
 def test_order():
     ab = get_alpaca_backend()
-    order = ab.order('MSFT', 2, order_type='limit', limit=5.0, extended_hours=True)
+    order = ab.order('MSFT', 2, order_type='limit', limit=5.0, extended_hours=False)
     print(order)
     assert False
 

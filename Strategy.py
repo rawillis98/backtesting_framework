@@ -1,3 +1,5 @@
+import pyfolio as pf
+import matplotlib.pyplot as plt
 import logging
 import logging.config
 import os
@@ -5,6 +7,7 @@ import time
 import datetime
 from pytz import timezone
 import sys
+import pandas as pd
 
 
 class Strategy:
@@ -36,7 +39,7 @@ class Strategy:
 
         self.frequencies = {}
         self.schedule = {}
-        
+        self.equity = {}        
         self.context = {}
         if hasattr(self, "init_context"):
             self.__logger.info("Running init_context")
@@ -44,6 +47,13 @@ class Strategy:
 
     def get_strategy_id(self):
         return int(time.time())
+
+    def analyze(self):
+        equity_series = pd.Series(self.equity)
+        returns = equity_series.pct_change()
+        logging.getLogger("matplotlib").setLevel(logging.WARNING)
+        pf.create_full_tear_sheet(returns)
+        plt.show()
 
     def run(self):
         self.__logger.info("Running!")
@@ -56,7 +66,7 @@ class Strategy:
             self.__logger.info(f"Market isn't open right now.")
             self.backend.step(next_open)
 
-        while True:
+        while self.backend.get_time() < self.backend.end_time:
             today = self.backend.get_time().date()
             self.__logger.debug(f"Today is {today}")
 
@@ -66,6 +76,7 @@ class Strategy:
 
             methods_to_run = self.get_methods_to_run_today()
             self.__logger.info(f"\tMethods scheduled for {today}: {methods_to_run}")
+            self.equity[self.backend.get_time()] = self.backend.get_equity() 
             while len(methods_to_run) > 0:
                 # get backend time
                 dt = self.backend.get_time()
@@ -100,6 +111,11 @@ class Strategy:
             next_open = self.backend.get_next_open()
             self.__logger.info(f"\tDone for today! The next open is {next_open}")
             self.backend.step(next_open)
+
+        self.equity[self.backend.get_time()] = self.backend.get_equity() 
+        self.logger.info("DONE!")
+        return
+
                 
     def schedule_function(self, function_name, trading_days, tod):
         self.frequencies[function_name] = (trading_days, tod)

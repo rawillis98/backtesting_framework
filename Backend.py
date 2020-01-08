@@ -36,3 +36,7 @@ class Backend(ABC):
     @abstractmethod
     def verify_account_access(self):
         pass
+
+    @abstractmethod
+    def quote(self, symbol):
+        pass
